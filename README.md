@@ -9,10 +9,12 @@ custom configurations through environment variables.
 The default name for the image is `postgresql`, but it is also available under
 the following tags
 
-Tag|Description|status|
-|:-|:-|:-:|
-|`edge`|This tag is based on `alpine:edge`. It is suitable for users who want the latest features and are willing to accept the risk of edge releases.|✅|
-|`latest`|This tag is based on `alpine:latest`. It offers a more stable environment compared to the edge version.|✅|
+[![CI for a PostgreSQL Docker image](https://github.com/Pixailz/docker_postgresql/actions/workflows/CI.yaml/badge.svg)](https://github.com/Pixailz/docker_postgresql/actions/workflows/CI.yaml)
+
+Tag|Description|
+|:-|:-|
+|`edge`|This tag is based on `alpine:edge`. It is suitable for users who want the latest features and are willing to accept the risk of edge releases.|
+|`latest`|This tag is based on `alpine:latest`. It offers a more stable environment compared to the edge version.|
 
 ## Quick Start
 
