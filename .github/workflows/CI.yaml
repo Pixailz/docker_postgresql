@@ -1,6 +1,6 @@
 name: "CI for a PostgreSQL Docker image"
 
-run-name: "#${{ github.run_number }}-${{ github. }} on ${{ github.event_name }} by ${{ github.actor }}"
+run-name: "#${{ github.run_number }}-${{ github.run_attempt }} on ${{ github.event_name }} by ${{ github.actor }}"
 
 on:
   push:
