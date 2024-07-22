@@ -1,0 +1,36 @@
+name: "CD for a PostgreSQL Docker image"
+
+run-name: "#${{ github.run_number }}-${{ github.run_attempt }} on ${{ github.event_name }} by ${{ github.actor }}"
+
+on:
+  workflow_call:
+    secrets:
+      DOCKER_USER:
+        required: true
+      DOCKER_PAT:
+        required: true
+
+jobs:
+  publish:
+    strategy:
+      max-parallel: 1
+      matrix:
+        tags: [
+          "edge",
+          "latest",
+        ]
+
+    runs-on: ubuntu-latest
+    steps:
+      - name: ☁️ Retrieve repo
+        uses: actions/checkout@v3
+
+      - name: 🤖 Build image
+        timeout-minutes: 2
+        run: make TAG=${{ matrix.tags }}
+
+      - name: ☁️ Login on Docker.io
+        run: docker login --username "${{ secrets.DOCKER_USER }}" --password-stdin <<<"${{ secrets.DOCKER_PAT }}"
+
+      - name: ☁️ Publishing ${{ matrix.tags }}
+        run: docker push ${{ secrets.DOCKER_USER }}/postgresql:${{ matrix.tags }}

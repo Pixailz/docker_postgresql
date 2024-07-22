@@ -1,4 +1,4 @@
-name: "CI/CD for a PostgreSQL Docker image"
+name: "CI for a PostgreSQL Docker image"
 
 run-name: "#${{ github.run_number }}-${{ github.run_attempt }} on ${{ github.event_name }} by ${{ github.actor }}"
 
@@ -34,7 +34,7 @@ jobs:
           docker compose version
           docker buildx version
 
-  build_publish:
+  build:
     strategy:
       max-parallel: 1
       matrix:
@@ -48,12 +48,12 @@ jobs:
       - name: ☁️ Retrieve repo
         uses: actions/checkout@v3
 
-      - name: 🤖 Build ${{ matrix.tags }}
+      - name: 🤖 Make test ${{ matrix.tags }}
         timeout-minutes: 2
         run: make TAG=${{ matrix.tags }} test
 
-      - name: ☁️ Login on Docker.io
-        run: docker login --username "${{ secrets.DOCKER_USER }}" --password-stdin <<<"${{ secrets.DOCKER_PAT }}"
-
-      - name: ☁️ Publishing ${{ matrix.tags }}
-        run: docker push ${{ secrets.DOCKER_USER }}/postgresql:${{ matrix.tags }}
+  publish:
+    needs: [build]
+    if: ${{ ! inputs.is_called }}
+    uses: ./.github/workflows/CD.yaml
+    secrets: inherit
