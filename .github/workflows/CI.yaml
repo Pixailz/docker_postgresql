@@ -1,0 +1,53 @@
+name: "CI for a PostgreSQL Docker image"
+
+run-name: "#${{ github.run_number }}-${{ github. }} on ${{ github.event_name }} by ${{ github.actor }}"
+
+on:
+  push:
+    path:
+      - 'Dockerfile**'
+      - 'entrypoint'
+      - 'Makefile'
+  pull_request:
+  workflow_dispatch:
+  workflow_call:
+    inputs:
+      is_called:
+        description: "Is called by another actions"
+        default: false
+        type: boolean
+
+jobs:
+  info:
+    runs-on: ubuntu-latest
+    steps:
+      - name: "💬 github"
+        run: |+
+          echo "Who launched:       ${{ github.actor }}"
+          echo "On branch:          ${{ github.ref_name }}"
+          echo "Commit sha:         ${{ github.sha }}"
+          echo "Trigger event name  ${{ github.event_name }}"
+
+      - name: "💬 Docker info"
+        run: |+
+          docker --version
+          docker compose version
+          docker buildx version
+
+  build:
+    strategy:
+      max-parallel: 1
+      matrix:
+        tags: [
+          "edge",
+          "latest",
+        ]
+
+    runs-on: ubuntu-latest
+    steps:
+      - name: ☁️ Retrieve repo
+        uses: actions/checkout@v3
+
+      - name: 🤖 Build ${{ matrix.tags }}
+        timeout-minutes: 2
+        run: make TARGET=${{ matrix.tags }} test

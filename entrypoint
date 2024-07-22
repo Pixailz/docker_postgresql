@@ -1,0 +1,104 @@
+#!/bin/ash
+
+set -eu -o pipefail
+
+ESC="\x1b"
+CSI="${ESC}["
+RST="${CSI}0m"
+
+RED="${CSI}31m"
+GRE="${CSI}32m"
+BLU="${CSI}34m"
+
+SERVICE_NAME="${GRE}PostgreSQL${RST}"
+SERVICE_NAME="${SERVICE_NAME} (${BLU}$(pg_ctl --version | cut -d' ' -f3)${RST})"
+
+if [ "${DOCKER_DEBUG}" != "" ]; then
+	printf "debuging %b\n\n" "${SERVICE_NAME}"
+	printf "PGDATA        %b\n" "${PGDATA}"
+	printf "PGDB          %b\n" "${PGDB}"
+	printf "PGPORT        %b\n" "${PGPORT}"
+	printf "PGUSER        %b\n" "${PGUSER}"
+	printf "PGPASS        %b\n" "${PGPASS}"
+	printf "PGLADDR       %b\n" "${PGLADDR}"
+	printf "PGHBA         %b\n" "${PGHBA}"
+	printf "DOCKER_DEBUG  %b\n\n" "${DOCKER_DEBUG}"
+fi
+
+do_as_postgres()
+{
+	local	cmd="${*}"
+
+	[ "${DOCKER_DEBUG}" != "" ] && echo "${cmd}"
+	su - postgres -c "${cmd}"
+}
+
+do_sql()
+{
+	local	req="${1}"
+
+	do_as_postgres "psql -p ${PGPORT} -c \"${req};\""
+}
+
+set_var()
+{
+	local	var_name="${1}"
+	local	var_value="${2}"
+	local	var_file="${PGDATA}/postgresql.conf"
+	local	pos
+
+	pos=$(grep -n "${var_name} =" "${var_file}" | cut -d':' -f1)
+	sed -i "${pos}d" "${var_file}"
+	sed -i "${pos}i${var_name} = ${var_value}" "${var_file}"
+}
+
+mkdir_as_postgres()
+{
+	local	path="${1}"
+
+	[ ! -d "${path}" ] && mkdir "${path}"
+	chown postgres:postgres "${path}"
+}
+
+postgres_init()
+{
+	mkdir_as_postgres "${PGDATA%\/*}"
+	mkdir_as_postgres /run/postgresql/
+	do_as_postgres "initdb -D ${PGDATA}"
+	set_var "listen_addresses" "'${PGLADDR}'"
+	set_var "logging_collector" "on"
+	set_var "log_directory" "'/var/log/postgresql'"
+	set_var "log_filename" "'postgresql.log'"
+	set_var "log_file_mode" "0666"
+	set_var "port" "${PGPORT}"
+	echo "${PGHBA}" | tee -a "${PGDATA}/pg_hba.conf"
+}
+
+postgres_db()
+{
+	do_as_postgres "pg_ctl start -D ${PGDATA}"
+	do_sql "CREATE DATABASE ${PGDB}"
+	do_sql "CREATE USER ${PGUSER} WITH ENCRYPTED PASSWORD '${PGPASS}'" || \
+	do_sql "ALTER USER ${PGUSER} WITH ENCRYPTED PASSWORD '${PGPASS}'"
+	do_sql "GRANT ALL PRIVILEGES ON DATABASE ${PGDB} TO ${PGUSER}"
+	do_sql "ALTER DATABASE ${PGDB} OWNER TO ${PGUSER}"
+	do_as_postgres "pg_ctl stop -D ${PGDATA}"
+}
+
+mkdir_as_postgres "/var/log/postgresql"
+mkdir_as_postgres "${PGDATA}"
+rm -rf "/run/postgresql"
+mkdir_as_postgres "/run/postgresql"
+
+if [ ! -f "${PGDATA}/PGVERSION" ]; then
+	printf "%b %b, initialize it\n" "${SERVICE_NAME}" "${RED}not found${RST}"
+
+	postgres_init
+	postgres_db
+else
+	printf "%b %b, Skiping initialization\n" "${SERVICE_NAME}" "${GRE}found${RST}"
+fi
+
+printf "%b launched\n" "${SERVICE_NAME}"
+
+do_as_postgres "postgres -D ${PGDATA}"
