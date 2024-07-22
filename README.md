@@ -4,12 +4,15 @@ This Docker image provides a simple and configurable PostgreSQL server, based on
 Alpine Linux. It is designed to be lightweight and easy to use, with support for
 custom configurations through environment variables.
 
+[![CI for a PostgreSQL Docker image](https://github.com/Pixailz/docker_postgresql/actions/workflows/CI.yaml/badge.svg)](https://github.com/Pixailz/docker_postgresql/actions/workflows/CI.yaml)
+
+- [Github](https://github.com/Pixailz/docker_postgresql)
+- [Docker](https://hub.docker.com/r/pixailz/postgresql)
+
 ## Tags
 
 The default name for the image is `postgresql`, but it is also available under
 the following tags
-
-[![CI for a PostgreSQL Docker image](https://github.com/Pixailz/docker_postgresql/actions/workflows/CI.yaml/badge.svg)](https://github.com/Pixailz/docker_postgresql/actions/workflows/CI.yaml)
 
 Tag|Description|
 |:-|:-|
