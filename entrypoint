@@ -90,7 +90,7 @@ mkdir_as_postgres "${PGDATA}"
 rm -rf "/run/postgresql"
 mkdir_as_postgres "/run/postgresql"
 
-if [ ! -f "${PGDATA}/PGVERSION" ]; then
+if [ ! -f "${PGDATA}/pg_hba.conf" ]; then
 	printf "%b %b, initialize it\n" "${SERVICE_NAME}" "${RED}not found${RST}"
 
 	postgres_init
