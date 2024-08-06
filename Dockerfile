@@ -2,8 +2,7 @@ ARG					TAG=edge
 
 FROM				alpine:${TAG} AS base
 
-RUN					apk add --update \
-						--virtual base \
+RUN					apk add --upgrade --progress --virtual dependencies \
 						postgresql \
 						dumb-init \
 					&& rm -f /var/cache/apk/*
@@ -12,7 +11,7 @@ RUN					apk add --update \
 
 FROM				base AS packed
 
-COPY				--chown=root:root entrypoint /run
+COPY				--chown=root:root --chmod=755 entrypoint /run
 
 # https://www.postgresql.org/docs/current/server-shutdown.html
 ## Smart Shutdown

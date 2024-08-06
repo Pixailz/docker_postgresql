@@ -1,7 +1,14 @@
 #!/bin/ash
 
+# Hard core mode
+## -e			Exit immediately if a command exits with a non-zero status.
+## -u			Treat unset variables as an error.
+## -o pipefail	The return value of a pipeline is the status of the last command
+## 				to exit with a non-zero status, or zero if no command exited
+##				with a non-zero status.
 set -eu -o pipefail
 
+# ANSI escape codes
 ESC="\x1b"
 CSI="${ESC}["
 RST="${CSI}0m"
@@ -10,9 +17,12 @@ RED="${CSI}31m"
 GRE="${CSI}32m"
 BLU="${CSI}34m"
 
+# Service name
 SERVICE_NAME="${GRE}PostgreSQL${RST}"
+# Service version
 SERVICE_NAME="${SERVICE_NAME} (${BLU}$(pg_ctl --version | cut -d' ' -f3)${RST})"
 
+# Debugging information
 if [ "${DOCKER_DEBUG}" != "" ]; then
 	printf "debuging %b\n\n" "${SERVICE_NAME}"
 	printf "PGDATA        %b\n" "${PGDATA}"
@@ -25,6 +35,7 @@ if [ "${DOCKER_DEBUG}" != "" ]; then
 	printf "DOCKER_DEBUG  %b\n\n" "${DOCKER_DEBUG}"
 fi
 
+# Functions
 do_as_postgres()
 {
 	local	cmd="${*}"
@@ -90,6 +101,7 @@ mkdir_as_postgres "${PGDATA}"
 rm -rf "/run/postgresql"
 mkdir_as_postgres "/run/postgresql"
 
+# Initialize the service only if not already initialized
 if [ ! -f "${PGDATA}/pg_hba.conf" ]; then
 	printf "%b %b, initialize it\n" "${SERVICE_NAME}" "${RED}not found${RST}"
 
@@ -101,4 +113,5 @@ fi
 
 printf "%b launched\n" "${SERVICE_NAME}"
 
+# Execute the service
 do_as_postgres "postgres -D ${PGDATA}"

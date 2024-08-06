@@ -25,5 +25,5 @@ run:		build
 # CI
 test:
 	TAG=$(TAG) $(DOCCD)
-	TAG=$(TAG) $(DOCCU) pg_isready port_check
+	TAG=$(TAG) $(DOCCU)
 	TAG=$(TAG) $(DOCCD)
